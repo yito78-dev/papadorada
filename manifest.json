@@ -1,0 +1,18 @@
+{
+  "name": "La Papa Dorada",
+  "short_name": "Papa Dorada",
+  "description": "Control de inversión y ventas para La Papa Dorada",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF8F0",
+  "theme_color": "#E8A020",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
