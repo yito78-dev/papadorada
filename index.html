@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#E8A020">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Papa Dorada">
+  <link rel="manifest" href="manifest.json">
+  <title>La Papa Dorada</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --primary: #E8A020;
+      --primary-dark: #C8821A;
+      --dark: #2C1810;
+      --bg: #FFF8F0;
+      --card: #FFFFFF;
+      --success: #27AE60;
+      --danger: #E74C3C;
+      --warning: #E67E22;
+      --muted: #95A5A6;
+      --border: #F0E0CC;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--dark);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(232,160,32,0.35);
+    }
+    .header h1 { font-size: 19px; font-weight: 700; flex: 1; }
+    .header-logo { font-size: 26px; }
+    .btn-back {
+      background: rgba(255,255,255,0.22);
+      border: none;
+      color: white;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    /* ── SCREENS ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .screen-body { padding: 18px 16px 48px; }
+
+    /* ── STATUS BADGE ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 600; margin-bottom: 22px;
+    }
+    .badge-on  { background: #D5F5E3; color: #1E8449; }
+    .badge-off { background: #FAD7A0; color: #CA6F1E; }
+
+    /* ── MENU BUTTONS ── */
+    .menu-list { display: flex; flex-direction: column; gap: 11px; }
+    .menu-btn {
+      background: var(--card);
+      border: none;
+      border-radius: 16px;
+      padding: 18px 16px;
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      text-align: left;
+      width: 100%;
+      border-left: 4px solid transparent;
+      transition: transform .1s;
+    }
+    .menu-btn:active { transform: scale(0.97); }
+    .menu-btn.c-primary { border-left-color: var(--primary); }
+    .menu-btn.c-success { border-left-color: var(--success); }
+    .menu-btn.c-danger  { border-left-color: var(--danger); }
+    .menu-btn.c-info    { border-left-color: #3498DB; }
+    .menu-btn.c-purple  { border-left-color: #9B59B6; }
+    .menu-icon { font-size: 30px; width: 44px; text-align: center; flex-shrink: 0; }
+    .menu-text { flex: 1; }
+    .menu-title    { font-size: 16px; font-weight: 700; display: block; }
+    .menu-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; display: block; }
+    .menu-arrow { font-size: 20px; color: var(--muted); }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+    .card-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+    .card-value { font-size: 30px; font-weight: 800; }
+    .card-value.c-green  { color: var(--success); }
+    .card-value.c-red    { color: var(--danger); }
+    .card-value.c-orange { color: var(--warning); }
+
+    /* ── STAT ROWS ── */
+    .stat-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-lbl { font-size: 15px; color: #555; }
+    .stat-val { font-size: 15px; font-weight: 700; }
+
+    /* ── FORMS ── */
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    .form-input {
+      width: 100%; padding: 15px;
+      border: 2px solid var(--border); border-radius: 12px;
+      font-size: 17px; font-weight: 600;
+      background: white; color: var(--dark); outline: none;
+      transition: border-color .2s;
+      -webkit-appearance: none;
+    }
+    .form-input:focus { border-color: var(--primary); }
+    .form-input.big { font-size: 26px; text-align: center; letter-spacing: 1px; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: block; width: 100%;
+      padding: 17px; border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      text-align: center; transition: transform .1s, opacity .1s;
+      margin-top: 10px;
+    }
+    .btn:first-child { margin-top: 0; }
+    .btn:active { transform: scale(0.97); opacity: .9; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger  { background: var(--danger);  color: white; }
+    .btn-outline { background: transparent; color: var(--muted); border: 2px solid var(--border); }
+
+    /* ── ALERTS ── */
+    .alert { padding: 14px; border-radius: 12px; margin-bottom: 14px; font-size: 14px; line-height: 1.5; }
+    .alert-warn  { background: #FFF3CD; border-left: 4px solid #F0A500; color: #7B5000; }
+    .alert-info  { background: #EBF5FB; border-left: 4px solid #2E86C1; color: #1A5276; }
+
+    /* ── RESULT BIG ── */
+    .result-box {
+      text-align: center; padding: 22px 16px;
+      border-radius: 20px; margin-bottom: 14px;
+    }
+    .result-box.green  { background: linear-gradient(135deg,#D5F5E3,#A9DFBF); }
+    .result-box.orange { background: linear-gradient(135deg,#FEF9E7,#FAD7A0); }
+    .result-box.red    { background: linear-gradient(135deg,#FADBD8,#F1948A); }
+    .result-emoji  { font-size: 46px; margin-bottom: 6px; }
+    .result-label  { font-size: 13px; font-weight: 600; opacity: .75; margin-bottom: 4px; }
+    .result-amount { font-size: 38px; font-weight: 900; }
+    .result-msg    { font-size: 14px; font-weight: 600; margin-top: 8px; }
+
+    /* ── SECTION LABEL ── */
+    .section-lbl { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 8px; }
+
+    /* ── HISTORY ITEMS ── */
+    .hist-item {
+      background: var(--card); border-radius: 14px;
+      padding: 14px; margin-bottom: 10px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--border);
+    }
+    .hist-item.profit { border-left-color: var(--success); }
+    .hist-item.loss   { border-left-color: var(--danger); }
+    .hist-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .hist-date { font-size: 12px; font-weight: 700; }
+    .hist-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .hist-res  { font-size: 16px; font-weight: 800; }
+    .hist-res.profit { color: var(--success); }
+    .hist-res.loss   { color: var(--danger); }
+    .hist-stats { display: flex; gap: 8px; }
+    .hist-stat { flex: 1; text-align: center; }
+    .hist-stat-lbl { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+    .hist-stat-val { font-size: 13px; font-weight: 700; }
+
+    /* ── RETIRO ROWS ── */
+    .retiro-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .retiro-row:last-child { border-bottom: none; }
+    .retiro-lbl { color: #555; flex: 1; padding-right: 8px; }
+    .retiro-amt { font-weight: 700; color: var(--danger); white-space: nowrap; }
+
+    /* ── EMPTY STATE ── */
+    .empty { text-align: center; padding: 48px 20px; }
+    .empty-icon { font-size: 60px; margin-bottom: 14px; }
+    .empty-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .empty-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: #2C1810; color: white;
+      padding: 13px 22px; border-radius: 100px;
+      font-size: 14px; font-weight: 600;
+      z-index: 200; transition: transform .3s ease;
+      max-width: calc(100% - 32px); text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    .divider { height: 1px; background: var(--border); margin: 4px 0 14px; }
+    .chip-active { background: var(--primary); color: white; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     PANTALLA: MENÚ PRINCIPAL
+════════════════════════════════════ -->
+<div id="s-menu" class="screen active">
+  <div class="header">
+    <span class="header-logo">🥔</span>
+    <h1>La Papa Dorada</h1>
+  </div>
+  <div class="screen-body">
+    <div id="menu-badge"></div>
+    <div class="menu-list">
+      <button class="menu-btn c-primary" onclick="ir('nueva-inversion')">
+        <span class="menu-icon">🌱</span>
+        <span class="menu-text">
+          <span class="menu-title">Nueva Inversión</span>
+          <span class="menu-subtitle">Comenzar un nuevo ciclo</span>
+        </span>
+        <span class="menu-arrow">›</span>
+      </button>
+      <button class="menu-btn c-success" onclick="ir('ventas')">
+        <span class="menu-icon">💰</span>
+        <span class="menu-text">
+          <span class="menu-title">Ventas del Día</span>
+          <span class="menu-subtitle">Registrar lo vendido hoy</span>
+        </span>
+        <span class="menu-arrow">›</span>
+      </button>
+      <button class="menu-btn c-danger" onclick="ir('retiro')">
+        <span class="menu-icon">💸</span>
+        <span class="menu-text">
+          <span class="menu-title">Retirar Dinero</span>
+          <span class="menu-subtitle">Sacar dinero de la caja</span>
+        </span>
+        <span class="menu-arrow">›</span>
+      </button>
+      <button class="menu-btn c-info" onclick="ir('estatus')">
+        <span class="menu-icon">📊</span>
+        <span class="menu-text">
+          <span class="menu-title">Mi Inversión Actual</span>
+          <span class="menu-subtitle">Ver cómo va tu negocio</span>
+        </span>
+        <span class="menu-arrow">›</span>
+      </button>
+      <button class="menu-btn c-purple" onclick="ir('historial')">
+        <span class="menu-icon">📚</span>
+        <span class="menu-text">
+          <span class="menu-title">Historial del Negocio</span>
+          <span class="menu-subtitle">Todos tus ciclos anteriores</span>
+        </span>
+        <span class="menu-arrow">›</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     PANTALLA: NUEVA INVERSIÓN
+════════════════════════════════════ -->
+<div id="s-nueva-inversion" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="volver()">‹</button>
+    <h1>Nueva Inversión</h1>
+  </div>
+  <div class="screen-body" id="nueva-inversion-body"></div>
+</div>
+
+<!-- ════════════════════════════════════
+     PANTALLA: VENTAS DEL DÍA
+════════════════════════════════════ -->
+<div id="s-ventas" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="volver()">‹</button>
+    <h1>Ventas del Día</h1>
+  </div>
+  <div class="screen-body" id="ventas-body"></div>
+</div>
+
+<!-- ════════════════════════════════════
+     PANTALLA: RETIRAR DINERO
+════════════════════════════════════ -->
+<div id="s-retiro" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="volver()">‹</button>
+    <h1>Retirar Dinero</h1>
+  </div>
+  <div class="screen-body" id="retiro-body"></div>
+</div>
+
+<!-- ════════════════════════════════════
+     PANTALLA: ESTATUS ACTUAL
+════════════════════════════════════ -->
+<div id="s-estatus" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="volver()">‹</button>
+    <h1>Mi Inversión Actual</h1>
+  </div>
+  <div class="screen-body" id="estatus-body"></div>
+</div>
+
+<!-- ════════════════════════════════════
+     PANTALLA: HISTORIAL
+════════════════════════════════════ -->
+<div id="s-historial" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="volver()">‹</button>
+    <h1>Historial del Negocio</h1>
+  </div>
+  <div class="screen-body" id="historial-body"></div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATOS
+// ══════════════════════════════════════════════
+const KEY = 'papadorada_v1';
+
+function cargar() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return { cicloActivo: null, historial: [] };
+    return JSON.parse(raw);
+  } catch { return { cicloActivo: null, historial: [] }; }
+}
+
+function guardar(data) {
+  localStorage.setItem(KEY, JSON.stringify(data));
+}
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function $ (id) { return document.getElementById(id); }
+
+function fmt(n) {
+  return '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtFecha(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function sumaRetiros(ciclo) {
+  if (!ciclo || !ciclo.retiros) return 0;
+  return ciclo.retiros.reduce((s, r) => s + r.monto, 0);
+}
+
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ══════════════════════════════════════════════
+//  NAVEGACIÓN
+// ══════════════════════════════════════════════
+let pantallaActual = 'menu';
+
+function ir(nombre) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const s = $('s-' + nombre);
+  if (!s) return;
+  s.classList.add('active');
+  window.scrollTo(0, 0);
+  pantallaActual = nombre;
+  renderizar(nombre);
+}
+
+function volver() { ir('menu'); }
+
+function renderizar(nombre) {
+  switch (nombre) {
+    case 'menu':            renderMenu(); break;
+    case 'nueva-inversion': renderNuevaInversion(); break;
+    case 'ventas':          renderVentas(); break;
+    case 'retiro':          renderRetiro(); break;
+    case 'estatus':         renderEstatus(); break;
+    case 'historial':       renderHistorial(); break;
+  }
+}
+
+// ══════════════════════════════════════════════
+//  MENÚ
+// ══════════════════════════════════════════════
+function renderMenu() {
+  const { cicloActivo } = cargar();
+  $('menu-badge').innerHTML = cicloActivo
+    ? `<div class="badge badge-on">● Ciclo activo desde ${fmtFecha(cicloActivo.fechaInicio)}</div>`
+    : `<div class="badge badge-off">○ Sin inversión activa</div>`;
+}
+
+// ══════════════════════════════════════════════
+//  NUEVA INVERSIÓN
+// ══════════════════════════════════════════════
+function renderNuevaInversion() {
+  const { cicloActivo } = cargar();
+  const el = $('nueva-inversion-body');
+
+  const formulario = `
+    <div class="form-group">
+      <label class="form-label">¿Cuánto vas a invertir?</label>
+      <input type="number" id="inp-inversion" class="form-input big"
+             placeholder="0.00" min="0" step="0.01" inputmode="decimal" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nota (opcional)</label>
+      <input type="text" id="inp-nota" class="form-input"
+             placeholder="Ej: Primera semana de mayo" autocomplete="off" autocorrect="off">
+    </div>
+  `;
+
+  if (cicloActivo) {
+    const ret   = sumaRetiros(cicloActivo);
+    const res   = cicloActivo.ventas - cicloActivo.inversion;
+    const isPos = res >= 0;
+    el.innerHTML = `
+      <div class="alert alert-warn">
+        ⚠️ <strong>¡Atención!</strong> Tienes un ciclo activo. Crear una nueva inversión lo cerrará.
+      </div>
+
+      <div class="section-lbl">Resumen del ciclo actual</div>
+      <div class="card">
+        <div class="stat-row"><span class="stat-lbl">📅 Inicio</span><span class="stat-val">${fmtFecha(cicloActivo.fechaInicio)}</span></div>
+        <div class="stat-row"><span class="stat-lbl">💼 Invertido</span><span class="stat-val">${fmt(cicloActivo.inversion)}</span></div>
+        <div class="stat-row"><span class="stat-lbl">💰 Ventas acumuladas</span><span class="stat-val">${fmt(cicloActivo.ventas)}</span></div>
+        <div class="stat-row"><span class="stat-lbl">💸 Total retirado</span><span class="stat-val">${fmt(ret)}</span></div>
+        <div class="stat-row">
+          <span class="stat-lbl">${isPos ? '📈 Ganancia' : '📉 Pérdida'}</span>
+          <span class="stat-val" style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">${isPos ? '+' : ''}${fmt(res)}</span>
+        </div>
+      </div>
+
+      <div class="section-lbl">Nueva inversión</div>
+      ${formulario}
+      <button class="btn btn-primary" onclick="confirmarNuevaInversion()">✅ Cerrar ciclo e iniciar nuevo</button>
+      <button class="btn btn-outline" onclick="volver()">Cancelar</button>
+    `;
+  } else {
+    el.innerHTML = `
+      <div class="alert alert-info">
+        💡 Ingresa el monto que vas a invertir para comenzar a llevar el control de tu negocio.
+      </div>
+      ${formulario}
+      <button class="btn btn-primary" onclick="confirmarNuevaInversion()">🌱 Iniciar inversión</button>
+    `;
+  }
+}
+
+function confirmarNuevaInversion() {
+  const monto = parseFloat($('inp-inversion').value);
+  const nota  = ($('inp-nota').value || '').trim();
+
+  if (!monto || monto <= 0) { toast('⚠️ Ingresa un monto válido mayor a 0'); return; }
+
+  const data = cargar();
+
+  if (data.cicloActivo) {
+    data.cicloActivo.fechaFin = new Date().toISOString();
+    data.historial.unshift(data.cicloActivo);
+  }
+
+  data.cicloActivo = {
+    id: Date.now().toString(),
+    inversion: monto,
+    nota: nota,
+    ventas: 0,
+    retiros: [],
+    fechaInicio: new Date().toISOString()
+  };
+
+  guardar(data);
+  toast('🌱 ¡Nueva inversión de ' + fmt(monto) + ' registrada!');
+  ir('menu');
+}
+
+// ══════════════════════════════════════════════
+//  VENTAS DEL DÍA
+// ══════════════════════════════════════════════
+function renderVentas() {
+  const { cicloActivo } = cargar();
+  const el = $('ventas-body');
+
+  if (!cicloActivo) {
+    el.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">💰</div>
+        <div class="empty-title">No hay inversión activa</div>
+        <div class="empty-sub">Primero crea una inversión para poder registrar ventas.</div>
+        <button class="btn btn-primary" onclick="ir('nueva-inversion')">🌱 Crear inversión</button>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-label">Ventas acumuladas en este ciclo</div>
+      <div class="card-value c-green">${fmt(cicloActivo.ventas)}</div>
+    </div>
+    <div class="alert alert-info">
+      💡 Ingresa el total que vendiste hoy. Se sumará a lo acumulado.
+    </div>
+    <div class="form-group">
+      <label class="form-label">¿Cuánto vendiste hoy?</label>
+      <input type="number" id="inp-ventas" class="form-input big"
+             placeholder="0.00" min="0" step="0.01" inputmode="decimal" autocomplete="off">
+    </div>
+    <button class="btn btn-success" onclick="guardarVentas()">💰 Registrar ventas</button>
+  `;
+}
+
+function guardarVentas() {
+  const monto = parseFloat($('inp-ventas').value);
+  if (!monto || monto <= 0) { toast('⚠️ Ingresa un monto válido mayor a 0'); return; }
+
+  const data = cargar();
+  if (!data.cicloActivo) return;
+
+  data.cicloActivo.ventas += monto;
+  guardar(data);
+  toast('💰 ' + fmt(monto) + ' registrado. Total: ' + fmt(data.cicloActivo.ventas));
+  ir('menu');
+}
+
+// ══════════════════════════════════════════════
+//  RETIRAR DINERO
+// ══════════════════════════════════════════════
+function renderRetiro() {
+  const { cicloActivo } = cargar();
+  const el = $('retiro-body');
+
+  if (!cicloActivo) {
+    el.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">💸</div>
+        <div class="empty-title">No hay inversión activa</div>
+        <div class="empty-sub">Primero crea una inversión para poder registrar retiros.</div>
+        <button class="btn btn-primary" onclick="ir('nueva-inversion')">🌱 Crear inversión</button>
+      </div>`;
+    return;
+  }
+
+  const ret  = sumaRetiros(cicloActivo);
+  const caja = cicloActivo.ventas - ret;
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-label">Caja disponible</div>
+      <div class="card-value ${caja >= 0 ? 'c-green' : 'c-red'}">${fmt(caja)}</div>
+    </div>
+    <div class="alert alert-warn">
+      💡 El retiro no afecta tu ganancia — solo reduce el dinero en caja.
+    </div>
+    <div class="form-group">
+      <label class="form-label">¿Cuánto vas a retirar?</label>
+      <input type="number" id="inp-retiro" class="form-input big"
+             placeholder="0.00" min="0" step="0.01" inputmode="decimal" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Motivo (opcional)</label>
+      <input type="text" id="inp-motivo" class="form-input"
+             placeholder="Ej: Pago proveedor, gastos..." autocomplete="off" autocorrect="off">
+    </div>
+    <button class="btn btn-danger" onclick="guardarRetiro()">💸 Registrar retiro</button>
+  `;
+}
+
+function guardarRetiro() {
+  const monto  = parseFloat($('inp-retiro').value);
+  const motivo = ($('inp-motivo').value || '').trim();
+
+  if (!monto || monto <= 0) { toast('⚠️ Ingresa un monto válido mayor a 0'); return; }
+
+  const data = cargar();
+  if (!data.cicloActivo) return;
+
+  data.cicloActivo.retiros.push({
+    monto: monto,
+    motivo: motivo || 'Sin motivo',
+    fecha: new Date().toISOString()
+  });
+
+  guardar(data);
+  toast('💸 Retiro de ' + fmt(monto) + ' registrado');
+  ir('menu');
+}
+
+// ══════════════════════════════════════════════
+//  ESTATUS DE INVERSIÓN ACTUAL
+// ══════════════════════════════════════════════
+function renderEstatus() {
+  const { cicloActivo } = cargar();
+  const el = $('estatus-body');
+
+  if (!cicloActivo) {
+    el.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">Sin inversión activa</div>
+        <div class="empty-sub">Crea una inversión para ver el estatus de tu negocio.</div>
+        <button class="btn btn-primary" onclick="ir('nueva-inversion')">🌱 Crear inversión</button>
+      </div>`;
+    return;
+  }
+
+  const ret       = sumaRetiros(cicloActivo);
+  const resultado = cicloActivo.ventas - cicloActivo.inversion;
+  const caja      = cicloActivo.ventas - ret;
+  const isGanancia = resultado >= 0;
+
+  let resultBox;
+  if (isGanancia) {
+    resultBox = `
+      <div class="result-box green">
+        <div class="result-emoji">🎉</div>
+        <div class="result-label">Ganancia actual</div>
+        <div class="result-amount" style="color:var(--success)">${fmt(resultado)}</div>
+        <div class="result-msg">¡Ya recuperaste tu inversión!</div>
+      </div>`;
+  } else {
+    resultBox = `
+      <div class="result-box orange">
+        <div class="result-emoji">💪</div>
+        <div class="result-label">Falta recuperar</div>
+        <div class="result-amount" style="color:var(--warning)">${fmt(Math.abs(resultado))}</div>
+        <div class="result-msg">Sigue vendiendo para recuperar tu inversión</div>
+      </div>`;
+  }
+
+  const retirosDetalle = cicloActivo.retiros.length > 0
+    ? `<div class="section-lbl">Detalle de retiros</div>
+       <div class="card" style="padding:14px 16px">
+         ${cicloActivo.retiros.map(r =>
+           `<div class="retiro-row">
+              <span class="retiro-lbl">${r.motivo} <span style="font-size:11px;color:var(--muted)">${fmtFecha(r.fecha)}</span></span>
+              <span class="retiro-amt">-${fmt(r.monto)}</span>
+            </div>`
+         ).join('')}
+       </div>`
+    : '';
+
+  el.innerHTML = `
+    ${resultBox}
+
+    <div class="section-lbl">Desglose</div>
+    <div class="card">
+      <div class="stat-row"><span class="stat-lbl">💼 Invertido</span><span class="stat-val">${fmt(cicloActivo.inversion)}</span></div>
+      <div class="stat-row"><span class="stat-lbl">💰 Ventas acumuladas</span><span class="stat-val">${fmt(cicloActivo.ventas)}</span></div>
+      <div class="stat-row"><span class="stat-lbl">💸 Total retirado</span><span class="stat-val">${fmt(ret)}</span></div>
+    </div>
+
+    <div class="section-lbl">Caja disponible <small style="font-size:10px;font-weight:400">(ventas − retiros)</small></div>
+    <div class="card">
+      <div class="card-value ${caja >= 0 ? 'c-green' : 'c-red'}">${fmt(caja)}</div>
+      ${caja < 0 ? '<p style="color:var(--danger);font-size:13px;margin-top:6px">⚠️ Has retirado más de lo vendido</p>' : ''}
+    </div>
+
+    ${retirosDetalle}
+
+    <div class="section-lbl">Datos del ciclo</div>
+    <div class="card">
+      <div class="stat-row"><span class="stat-lbl">📅 Inicio</span><span class="stat-val">${fmtFecha(cicloActivo.fechaInicio)}</span></div>
+      ${cicloActivo.nota ? `<div class="stat-row"><span class="stat-lbl">📝 Nota</span><span class="stat-val">${cicloActivo.nota}</span></div>` : ''}
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════
+//  HISTORIAL DEL NEGOCIO
+// ══════════════════════════════════════════════
+function renderHistorial() {
+  const data = cargar();
+  const el = $('historial-body');
+
+  const todos = data.cicloActivo
+    ? [data.cicloActivo, ...data.historial]
+    : [...data.historial];
+
+  if (todos.length === 0) {
+    el.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📚</div>
+        <div class="empty-title">Sin historial todavía</div>
+        <div class="empty-sub">Aquí aparecerán todos tus ciclos de inversión.</div>
+      </div>`;
+    return;
+  }
+
+  const totInversion = todos.reduce((s, c) => s + c.inversion, 0);
+  const totVentas    = todos.reduce((s, c) => s + c.ventas, 0);
+  const totRetiros   = todos.reduce((s, c) => s + sumaRetiros(c), 0);
+  const ganTotal     = totVentas - totInversion;
+  const cajaTotal    = totVentas - totRetiros;
+  const isPos        = ganTotal >= 0;
+
+  const ciclosCerrados = data.historial.length > 0
+    ? `<div class="section-lbl">Ciclos cerrados (${data.historial.length})</div>
+       ${data.historial.map(c => {
+         const r   = sumaRetiros(c);
+         const res = c.ventas - c.inversion;
+         const g   = res >= 0;
+         return `
+           <div class="hist-item ${g ? 'profit' : 'loss'}">
+             <div class="hist-head">
+               <div>
+                 <div class="hist-date">${fmtFecha(c.fechaInicio)} → ${fmtFecha(c.fechaFin)}</div>
+                 ${c.nota ? `<div class="hist-sub">${c.nota}</div>` : ''}
+               </div>
+               <div class="hist-res ${g ? 'profit' : 'loss'}">${g ? '+' : ''}${fmt(res)}</div>
+             </div>
+             <div class="hist-stats">
+               <div class="hist-stat"><div class="hist-stat-lbl">Invertido</div><div class="hist-stat-val">${fmt(c.inversion)}</div></div>
+               <div class="hist-stat"><div class="hist-stat-lbl">Vendido</div><div class="hist-stat-val">${fmt(c.ventas)}</div></div>
+               <div class="hist-stat"><div class="hist-stat-lbl">Retirado</div><div class="hist-stat-val">${fmt(r)}</div></div>
+             </div>
+           </div>`;
+       }).join('')}`
+    : '';
+
+  const cicloActivoBadge = data.cicloActivo
+    ? `<div class="section-lbl">Ciclo en curso</div>
+       <div class="hist-item" style="border-left-color:var(--primary)">
+         <div class="hist-head">
+           <div>
+             <div class="hist-date">Desde ${fmtFecha(data.cicloActivo.fechaInicio)}</div>
+             ${data.cicloActivo.nota ? `<div class="hist-sub">${data.cicloActivo.nota}</div>` : ''}
+           </div>
+           <span class="chip-active">Activo</span>
+         </div>
+         <div class="hist-stats">
+           <div class="hist-stat"><div class="hist-stat-lbl">Invertido</div><div class="hist-stat-val">${fmt(data.cicloActivo.inversion)}</div></div>
+           <div class="hist-stat"><div class="hist-stat-lbl">Vendido</div><div class="hist-stat-val">${fmt(data.cicloActivo.ventas)}</div></div>
+           <div class="hist-stat"><div class="hist-stat-lbl">Retirado</div><div class="hist-stat-val">${fmt(sumaRetiros(data.cicloActivo))}</div></div>
+         </div>
+       </div>`
+    : '';
+
+  el.innerHTML = `
+    <div class="result-box ${isPos ? 'green' : 'red'}">
+      <div class="result-emoji">${isPos ? '📈' : '📉'}</div>
+      <div class="result-label">${isPos ? 'Ganancia total' : 'Pérdida total'}</div>
+      <div class="result-amount" style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">${isPos ? '+' : ''}${fmt(ganTotal)}</div>
+    </div>
+
+    <div class="section-lbl">Resumen general</div>
+    <div class="card">
+      <div class="stat-row"><span class="stat-lbl">💼 Total invertido</span><span class="stat-val">${fmt(totInversion)}</span></div>
+      <div class="stat-row"><span class="stat-lbl">💰 Total vendido</span><span class="stat-val">${fmt(totVentas)}</span></div>
+      <div class="stat-row"><span class="stat-lbl">💸 Total retirado</span><span class="stat-val">${fmt(totRetiros)}</span></div>
+    </div>
+
+    <div class="section-lbl">Caja total <small style="font-size:10px;font-weight:400">(vendido − retirado)</small></div>
+    <div class="card">
+      <div class="card-value ${cajaTotal >= 0 ? 'c-green' : 'c-red'}">${fmt(cajaTotal)}</div>
+    </div>
+
+    ${cicloActivoBadge}
+    ${ciclosCerrados}
+  `;
+}
+
+// ══════════════════════════════════════════════
+//  INICIO
+// ══════════════════════════════════════════════
+renderMenu();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
