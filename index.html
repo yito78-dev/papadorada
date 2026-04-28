@@ -101,6 +101,7 @@
     .menu-btn.c-danger  { border-left-color: var(--danger); }
     .menu-btn.c-info    { border-left-color: #3498DB; }
     .menu-btn.c-purple  { border-left-color: #9B59B6; }
+    .menu-btn.c-teal    { border-left-color: #1ABC9C; }
     .menu-icon { font-size: 30px; width: 44px; text-align: center; flex-shrink: 0; }
     .menu-text { flex: 1; }
     .menu-title    { font-size: 16px; font-weight: 700; display: block; }
@@ -227,6 +228,21 @@
 
     .divider { height: 1px; background: var(--border); margin: 4px 0 14px; }
     .chip-active { background: var(--primary); color: white; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+
+    /* ── HERRAMIENTA ROWS ── */
+    .herr-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+    }
+    .herr-row:last-child { border-bottom: none; }
+    .herr-nombre { flex: 1; font-size: 15px; font-weight: 600; }
+    .herr-costo  { font-size: 15px; font-weight: 700; color: var(--dark); white-space: nowrap; }
+    .herr-del {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 18px; padding: 2px 6px;
+      border-radius: 6px; line-height: 1;
+    }
+    .herr-del:active { color: var(--danger); }
   </style>
 </head>
 <body>
@@ -279,6 +295,14 @@
         <span class="menu-text">
           <span class="menu-title">Historial del Negocio</span>
           <span class="menu-subtitle">Todos tus ciclos anteriores</span>
+        </span>
+        <span class="menu-arrow">›</span>
+      </button>
+      <button class="menu-btn c-teal" onclick="ir('herramientas')">
+        <span class="menu-icon">🔧</span>
+        <span class="menu-text">
+          <span class="menu-title">Herramientas y Material</span>
+          <span class="menu-subtitle">Gastos fijos del negocio</span>
         </span>
         <span class="menu-arrow">›</span>
       </button>
@@ -341,6 +365,17 @@
   <div class="screen-body" id="historial-body"></div>
 </div>
 
+<!-- ════════════════════════════════════
+     PANTALLA: HERRAMIENTAS Y MATERIAL
+════════════════════════════════════ -->
+<div id="s-herramientas" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="volver()">‹</button>
+    <h1>Herramientas y Material</h1>
+  </div>
+  <div class="screen-body" id="herramientas-body"></div>
+</div>
+
 <!-- Toast notification -->
 <div id="toast"></div>
 
@@ -353,9 +388,11 @@ const KEY = 'papadorada_v1';
 function cargar() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { cicloActivo: null, historial: [] };
-    return JSON.parse(raw);
-  } catch { return { cicloActivo: null, historial: [] }; }
+    if (!raw) return { cicloActivo: null, historial: [], herramientas: [] };
+    const data = JSON.parse(raw);
+    if (!data.herramientas) data.herramientas = [];
+    return data;
+  } catch { return { cicloActivo: null, historial: [], herramientas: [] }; }
 }
 
 function guardar(data) {
@@ -413,6 +450,7 @@ function renderizar(nombre) {
     case 'retiro':          renderRetiro(); break;
     case 'estatus':         renderEstatus(); break;
     case 'historial':       renderHistorial(); break;
+    case 'herramientas':    renderHerramientas(); break;
   }
 }
 
@@ -793,6 +831,128 @@ function renderHistorial() {
     ${cicloActivoBadge}
     ${ciclosCerrados}
   `;
+}
+
+// ══════════════════════════════════════════════
+//  HERRAMIENTAS Y MATERIAL FIJO
+// ══════════════════════════════════════════════
+function gananciaTotal(data) {
+  const todos = data.cicloActivo
+    ? [data.cicloActivo, ...data.historial]
+    : [...data.historial];
+  const totVentas    = todos.reduce((s, c) => s + c.ventas, 0);
+  const totInversion = todos.reduce((s, c) => s + c.inversion, 0);
+  return totVentas - totInversion;
+}
+
+function renderHerramientas() {
+  const data = cargar();
+  const el   = $('herramientas-body');
+  const herr = data.herramientas;
+  const totalHerr  = herr.reduce((s, h) => s + h.costo, 0);
+  const ganancia   = gananciaTotal(data);
+  const recuperado = ganancia >= totalHerr;
+  const falta      = totalHerr - ganancia;
+
+  let progressBox;
+  if (herr.length === 0) {
+    progressBox = '';
+  } else if (recuperado) {
+    progressBox = `
+      <div class="result-box green">
+        <div class="result-emoji">🎉</div>
+        <div class="result-label">Inversión en herramientas</div>
+        <div class="result-amount" style="color:var(--success)">${fmt(totalHerr)}</div>
+        <div class="result-msg">¡Ya recuperaste la inversión en herramientas!</div>
+      </div>`;
+  } else {
+    progressBox = `
+      <div class="result-box orange">
+        <div class="result-emoji">🔧</div>
+        <div class="result-label">Faltan para recuperar herramientas</div>
+        <div class="result-amount" style="color:var(--warning)">${fmt(falta)}</div>
+        <div class="result-msg">Se recuperan poco a poco con las ganancias del negocio</div>
+      </div>`;
+  }
+
+  const listaHTML = herr.length > 0
+    ? `<div class="card" style="padding:14px 16px">
+        ${herr.map((h, i) => `
+          <div class="herr-row">
+            <span class="herr-nombre">${h.nombre}</span>
+            <span class="herr-costo">${fmt(h.costo)}</span>
+            <button class="herr-del" onclick="eliminarHerramienta(${i})" title="Eliminar">✕</button>
+          </div>`).join('')}
+       </div>
+       <div class="card">
+         <div class="stat-row" style="border:none;padding:0">
+           <span class="stat-lbl" style="font-weight:700">Total herramientas</span>
+           <span class="stat-val" style="font-size:18px">${fmt(totalHerr)}</span>
+         </div>
+       </div>`
+    : `<div class="empty" style="padding:32px 20px">
+         <div class="empty-icon">🔧</div>
+         <div class="empty-title">Sin herramientas registradas</div>
+         <div class="empty-sub">Agrega tus herramientas y material fijo para llevar el control.</div>
+       </div>`;
+
+  const gananciaInfo = herr.length > 0
+    ? `<div class="section-lbl">Ganancia acumulada del negocio</div>
+       <div class="card">
+         <div class="card-label">Ventas totales − Inversiones totales</div>
+         <div class="card-value ${ganancia >= 0 ? 'c-green' : 'c-red'}">${fmt(ganancia)}</div>
+       </div>`
+    : '';
+
+  el.innerHTML = `
+    <div class="alert alert-info">
+      💡 Estas herramientas son independientes del ciclo de inventario. No se borran al iniciar nueva inversión.
+    </div>
+
+    ${progressBox}
+
+    <div class="section-lbl">Agregar herramienta o material</div>
+    <div class="card">
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Nombre</label>
+        <input type="text" id="inp-herr-nombre" class="form-input"
+               placeholder="Ej: Rayadora, Sellador, Canasta..." autocomplete="off" autocorrect="off">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Costo</label>
+        <input type="number" id="inp-herr-costo" class="form-input big"
+               placeholder="0.00" min="0" step="0.01" inputmode="decimal" autocomplete="off">
+      </div>
+    </div>
+    <button class="btn btn-primary" style="background:#1ABC9C" onclick="agregarHerramienta()">🔧 Agregar herramienta</button>
+
+    ${herr.length > 0 ? '<div class="section-lbl">Lista de herramientas</div>' : ''}
+    ${listaHTML}
+    ${gananciaInfo}
+  `;
+}
+
+function agregarHerramienta() {
+  const nombre = ($('inp-herr-nombre').value || '').trim();
+  const costo  = parseFloat($('inp-herr-costo').value);
+
+  if (!nombre) { toast('⚠️ Escribe el nombre de la herramienta'); return; }
+  if (!costo || costo <= 0) { toast('⚠️ Ingresa un costo válido mayor a 0'); return; }
+
+  const data = cargar();
+  data.herramientas.push({ nombre, costo, fecha: new Date().toISOString() });
+  guardar(data);
+  toast('🔧 ' + nombre + ' agregada — ' + fmt(costo));
+  renderHerramientas();
+}
+
+function eliminarHerramienta(idx) {
+  const data = cargar();
+  const nombre = data.herramientas[idx]?.nombre || 'herramienta';
+  data.herramientas.splice(idx, 1);
+  guardar(data);
+  toast('🗑️ ' + nombre + ' eliminada');
+  renderHerramientas();
 }
 
 // ══════════════════════════════════════════════
